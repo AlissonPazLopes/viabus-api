@@ -1,0 +1,28 @@
+spring:
+  application:
+    name: viabus-api
+
+  # Banco H2 em memória para testes
+  datasource:
+    url: jdbc:h2:mem:viabus_test_db;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+
+  # JPA para ambiente de testes
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+    open-in-view: false
+
+  # Desativa Flyway nos testes com H2
+  flyway:
+    enabled: false
+
+  # Cache simples em memória para testes independentes do Redis
+  cache:
+    type: simple
