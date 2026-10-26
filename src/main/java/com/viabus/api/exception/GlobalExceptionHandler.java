@@ -1,7 +1,9 @@
 package com.viabus.api.exception;
 
+import jakarta.persistence.OptimisticLockException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -22,6 +24,20 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<Map<String, Object>> handleBusinessException(BusinessException ex) {
         return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), null);
+    }
+
+    @ExceptionHandler(ConflitoConcorrenciaException.class)
+    public ResponseEntity<Map<String, Object>> handleConflitoConcorrencia(ConflitoConcorrenciaException ex) {
+        return buildErrorResponse(HttpStatus.CONFLICT, ex.getMessage(), null);
+    }
+
+    @ExceptionHandler({ObjectOptimisticLockingFailureException.class, OptimisticLockException.class})
+    public ResponseEntity<Map<String, Object>> handleOptimisticLock(Exception ex) {
+        return buildErrorResponse(
+                HttpStatus.CONFLICT,
+                "Conflito de concorrência detectado: o assento ou a viagem foi atualizado simultaneamente por outro usuário.",
+                null
+        );
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
