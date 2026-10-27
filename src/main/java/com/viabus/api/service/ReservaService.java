@@ -8,6 +8,7 @@ import com.viabus.api.domain.enums.StatusAssento;
 import com.viabus.api.domain.enums.StatusReserva;
 import com.viabus.api.domain.enums.StatusViagem;
 import com.viabus.api.domain.enums.TipoTarifa;
+import com.viabus.api.dto.BilheteEmbarqueResponse;
 import com.viabus.api.dto.ElegibilidadeIdJovemResponse;
 import com.viabus.api.dto.ReservaRequest;
 import com.viabus.api.dto.ReservaResponse;
@@ -25,9 +26,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.EnumSet;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.Set;
 
@@ -193,6 +198,45 @@ public class ReservaService {
     }
 
     @Transactional(readOnly = true)
+    public BilheteEmbarqueResponse emitirBilheteEmbarque(Long reservaId) {
+        Reserva reserva = buscarEntidadePorId(reservaId);
+
+        if (reserva.getStatus() != StatusReserva.CONFIRMADA) {
+            throw new BusinessException(
+                    "O bilhete de embarque só pode ser emitido para reservas com status CONFIRMADA. Status atual: " + reserva.getStatus()
+            );
+        }
+
+        Viagem viagem = reserva.getViagem();
+        Passageiro passageiro = reserva.getPassageiro();
+        AssentoViagem assento = reserva.getAssentoViagem();
+
+        String origemFormatada = viagem.getRota().getCidadeOrigem().getNome() + "/" + viagem.getRota().getCidadeOrigem().getUf();
+        String destinoFormatado = viagem.getRota().getCidadeDestino().getNome() + "/" + viagem.getRota().getCidadeDestino().getUf();
+        String cpfMascarado = mascararCpf(passageiro.getCpf());
+        String hashValidacao = gerarHashValidacaoSha256(reserva);
+
+        return new BilheteEmbarqueResponse(
+                reserva.getId(),
+                reserva.getCodigoReserva(),
+                passageiro.getNome(),
+                cpfMascarado,
+                origemFormatada,
+                destinoFormatado,
+                viagem.getDataHoraPartida(),
+                viagem.getDataHoraChegadaPrevista(),
+                assento.getNumeroAssento(),
+                viagem.getOnibus().getPlaca(),
+                viagem.getOnibus().getModelo(),
+                viagem.getOnibus().getTipoLeito(),
+                reserva.getTipoTarifa(),
+                reserva.getValorFinal(),
+                reserva.getDataConfirmacao(),
+                hashValidacao
+        );
+    }
+
+    @Transactional(readOnly = true)
     public ReservaResponse buscarPorId(Long id) {
         return ReservaResponse.fromEntity(buscarEntidadePorId(id));
     }
@@ -252,6 +296,32 @@ public class ReservaService {
             case ID_JOVEM_DESCONTO -> valorOriginal.multiply(new BigDecimal("0.50")).setScale(2, RoundingMode.HALF_UP);
             case COMERCIAL -> valorOriginal.setScale(2, RoundingMode.HALF_UP);
         };
+    }
+
+    private String mascararCpf(String cpf) {
+        if (cpf == null || cpf.length() != 11) {
+            return "***.***.***-**";
+        }
+        return "***." + cpf.substring(3, 6) + "." + cpf.substring(6, 9) + "-**";
+    }
+
+    private String gerarHashValidacaoSha256(Reserva reserva) {
+        String payload = String.join("|",
+                String.valueOf(reserva.getId()),
+                reserva.getCodigoReserva(),
+                reserva.getPassageiro().getCpf(),
+                String.valueOf(reserva.getViagem().getId()),
+                String.valueOf(reserva.getAssentoViagem().getNumeroAssento()),
+                reserva.getTipoTarifa().name(),
+                reserva.getValorFinal().toPlainString()
+        );
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hashBytes = digest.digest(payload.getBytes(StandardCharsets.UTF_8));
+            return HexFormat.of().formatHex(hashBytes);
+        } catch (NoSuchAlgorithmException ex) {
+            throw new IllegalStateException("Algoritmo SHA-256 indisponível no ambiente Java.", ex);
+        }
     }
 
     private String gerarCodigoReservaUnico() {
