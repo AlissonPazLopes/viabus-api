@@ -44,6 +44,20 @@ spring:
       time-to-live: 300000
       cache-null-values: false
 
+# Documentação OpenAPI 3 / Swagger UI
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+
+# Scheduler de Expiração de Reservas
+viabus:
+  scheduler:
+    expiracao-ms: 60000
+
 # Logs da Aplicação
 logging:
   level:
