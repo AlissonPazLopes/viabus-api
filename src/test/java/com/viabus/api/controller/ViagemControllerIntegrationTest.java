@@ -11,6 +11,7 @@ import com.viabus.api.dto.ViagemRequestDTO;
 import com.viabus.api.repository.AssentoViagemRepository;
 import com.viabus.api.repository.CidadeRepository;
 import com.viabus.api.repository.OnibusRepository;
+import com.viabus.api.repository.ReservaRepository;
 import com.viabus.api.repository.RotaRepository;
 import com.viabus.api.repository.ViagemRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -44,6 +45,9 @@ class ViagemControllerIntegrationTest {
     private ObjectMapper objectMapper;
 
     @Autowired
+    private ReservaRepository reservaRepository;
+
+    @Autowired
     private AssentoViagemRepository assentoViagemRepository;
 
     @Autowired
@@ -63,6 +67,7 @@ class ViagemControllerIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        reservaRepository.deleteAll();
         assentoViagemRepository.deleteAll();
         viagemRepository.deleteAll();
         rotaRepository.deleteAll();

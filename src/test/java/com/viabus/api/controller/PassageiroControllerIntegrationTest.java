@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.viabus.api.dto.BeneficioIdJovemRequest;
 import com.viabus.api.dto.PassageiroRequest;
 import com.viabus.api.repository.PassageiroRepository;
+import com.viabus.api.repository.ReservaRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -34,10 +35,14 @@ class PassageiroControllerIntegrationTest {
     private ObjectMapper objectMapper;
 
     @Autowired
+    private ReservaRepository reservaRepository;
+
+    @Autowired
     private PassageiroRepository passageiroRepository;
 
     @BeforeEach
     void setUp() {
+        reservaRepository.deleteAll();
         passageiroRepository.deleteAll();
     }
 
