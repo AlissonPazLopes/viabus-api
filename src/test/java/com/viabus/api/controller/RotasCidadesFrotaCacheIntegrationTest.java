@@ -5,9 +5,12 @@ import com.viabus.api.domain.enums.TipoLeito;
 import com.viabus.api.dto.CidadeRequestDTO;
 import com.viabus.api.dto.OnibusRequestDTO;
 import com.viabus.api.dto.RotaRequestDTO;
+import com.viabus.api.repository.AssentoViagemRepository;
 import com.viabus.api.repository.CidadeRepository;
 import com.viabus.api.repository.OnibusRepository;
+import com.viabus.api.repository.ReservaRepository;
 import com.viabus.api.repository.RotaRepository;
+import com.viabus.api.repository.ViagemRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -41,6 +44,15 @@ class RotasCidadesFrotaCacheIntegrationTest {
     private ObjectMapper objectMapper;
 
     @Autowired
+    private ReservaRepository reservaRepository;
+
+    @Autowired
+    private AssentoViagemRepository assentoViagemRepository;
+
+    @Autowired
+    private ViagemRepository viagemRepository;
+
+    @Autowired
     private CidadeRepository cidadeRepository;
 
     @Autowired
@@ -54,6 +66,9 @@ class RotasCidadesFrotaCacheIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        reservaRepository.deleteAll();
+        assentoViagemRepository.deleteAll();
+        viagemRepository.deleteAll();
         rotaRepository.deleteAll();
         onibusRepository.deleteAll();
         cidadeRepository.deleteAll();
